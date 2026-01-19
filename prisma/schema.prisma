@@ -41,8 +41,8 @@ model User {
   lastActiveAt   DateTime
   updatedAt      DateTime @default(now()) @updatedAt
   createdAt      DateTime @default(now())
-  createdNotes Note[] @relation("NoteAuthor") // Notes crées par le user
-  memberOfNotes Note[] @relation("NoteMembers") // Notes où le user est concerné
+  createdNotes   Note[]   @relation("NoteAuthor") // Notes crées par le user
+  memberOfNotes  Note[]   @relation("NoteMembers") // Notes où le user est concerné
 }
 
 model Note {
@@ -52,7 +52,7 @@ model Note {
   author         User     @relation("NoteAuthor", fields: [authorId], references: [id])
   members        User[]   @relation("NoteMembers")
   emoji          String
-  pin            Boolean
+  pin            Boolean  @default(false)
   mentionMembers Boolean  @default(true)
   content        Json
   updatedAt      DateTime @default(now()) @updatedAt
@@ -68,8 +68,8 @@ model YouTubeAccount {
   customUrl    String?
   refreshToken String // Auth
   stats        DailyStat[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model TikTokAccount {
@@ -82,22 +82,23 @@ model TikTokAccount {
   refreshToken String // Expire en 1 an
   expiresIn    Int // Durée de validité en secondes (souvent 86400 -> 24h)
   stats        DailyStat[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model DailyStat {
-  id        String   @id @default(uuid())
-  date      DateTime
-  views     Int      @default(0)
-  followers Int      @default(0)
-  likes     Int      @default(0)
-  comments  Int?     @default(0)
-  shares    Int?     @default(0)
+  id               String          @id @default(uuid())
+  date             DateTime
+  views            Int             @default(0)
+  followers        Int             @default(0)
+  likes            Int             @default(0)
+  comments         Int?            @default(0)
+  shares           Int?            @default(0)
   youtubeAccountId String?
   youtubeAccount   YouTubeAccount? @relation(fields: [youtubeAccountId], references: [id], onDelete: Cascade)
   tikTokAccountId  String?
   tikTokAccount    TikTokAccount?  @relation(fields: [tikTokAccountId], references: [id], onDelete: Cascade)
+
   @@unique([youtubeAccountId, date])
   @@unique([tikTokAccountId, date])
 }

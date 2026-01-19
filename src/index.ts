@@ -15,6 +15,7 @@ import manualGenerateToUploadRoutes from "./manual-generate-to-upload/manual-gen
 import cutRoutes from "./cut/cut.routes.js";
 import userRoutes from "./user/user.routes.js";
 import statsRoutes from "./stats/stats.routes.js";
+import notesRoutes from "./notes/notes.routes.js";
 import path from "path";
 
 app.use(express.json());
@@ -74,6 +75,9 @@ app.use("/users", userRoutes);
 
 // GET STATS
 app.use("/stats", statsRoutes);
+
+// GET NOTES
+app.use("/notes", notesRoutes);
 
 app.listen(4000, "0.0.0.0", () => {
   console.log(`Server is running at ${baseUrl}`);
