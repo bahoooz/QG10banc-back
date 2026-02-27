@@ -8,12 +8,12 @@ const GATEKEEPER_PASSWORD = process.env.GATEKEEPER_PASSWORD;
 
 if (!JWT_SECRET)
   throw new Error(
-    "FATAL ERROR: La variable JWT_SECRET n'est pas définie dans le .env"
+    "FATAL ERROR: La variable JWT_SECRET n'est pas définie dans le .env",
   );
 
 if (!GATEKEEPER_PASSWORD)
   throw new Error(
-    "FATAL ERROR: La variable GATEKEEPER_PASSWORD n'est pas définie dans le .env"
+    "FATAL ERROR: La variable GATEKEEPER_PASSWORD n'est pas définie dans le .env",
   );
 
 export const createUserService = async (formData: TSignupSchema) => {
@@ -27,7 +27,7 @@ export const createUserService = async (formData: TSignupSchema) => {
 
   if (existingUser)
     throw new Error(
-      "Un compte existe déjà avec cette email et/ou ce nom d'utilisateur"
+      "Un compte existe déjà avec cette email et/ou ce nom d'utilisateur",
     );
 
   const salt = await bcrypt.genSalt(10);
@@ -134,4 +134,20 @@ export const checkLoginService = async (token: string) => {
   const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
 
   return decoded;
+};
+
+export const heartbeatService = async (userId: number) => {
+  const heartbeat = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      lastActiveAt: new Date(),
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return heartbeat
 };

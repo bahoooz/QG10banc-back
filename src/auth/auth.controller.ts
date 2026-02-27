@@ -4,6 +4,7 @@ import {
   checkLoginService,
   createUserService,
   getSessionService,
+  heartbeatService,
   loginService,
   verifyAndTokenGatekeeperService,
 } from "./auth.service.js";
@@ -88,7 +89,7 @@ export const getSession = async (req: AuthRequest, res: Response) => {
 
 export const verifyPasswordAndLoginGatekeeper = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { password } = req.body;
@@ -142,5 +143,20 @@ export const checkLogin = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(401).json({ authorized: false, error: "Token invalide" });
+  }
+};
+
+export const heartbeat = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) return res.status(401).json({ message: "Non autorisé" });
+
+    await heartbeatService(userId);
+
+    return res.status(200).json({ status: "ok" });
+  } catch (error) {
+    console.error("Erreur heartbeat : ", error);
+    return res.status(500).json({ message: "Erreur interne du serveur" });
   }
 };
