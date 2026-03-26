@@ -1,6 +1,6 @@
 import express from "express";
 import { getSpecificUser, getUsers } from "./user.controller.js";
-import { verifyGatekeeperToken } from "../auth/auth.middleware.js";
+import { verifyGatekeeperToken } from "../../middlewares/authHandler.js";
 
 const router = express.Router();
 

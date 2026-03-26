@@ -1,4 +1,5 @@
 import { TNoteSchema } from "../../schemas/noteSchema.js";
+import { AppError } from "../../utils.js";
 import { formatSlug } from "../lib/format.js";
 import { prisma } from "../lib/prisma.js";
 
@@ -83,7 +84,7 @@ export const pinNoteService = async (id: number) => {
     },
   });
 
-  if (!note) throw new Error("Note introuvable");
+  if (!note) throw new AppError(404, "NOTE_NOT_FOUND");
 
   const pinnedNote = await prisma.note.update({
     where: {
@@ -112,7 +113,7 @@ export const updateNoteService = async (
     },
   });
 
-  if (!existingNote) throw new Error("Note introuvable");
+  if (!existingNote) throw new AppError(404, "NOTE_NOT_FOUND");
 
   const updatedNote = await prisma.note.update({
     where: {
@@ -142,7 +143,7 @@ export const deleteNoteService = async (id: number) => {
     },
   });
 
-  if (!existingNote) throw new Error("Note introuvable");
+  if (!existingNote) throw new AppError(404, "NOTE_NOT_FOUND");
 
   const deletedNote = await prisma.note.delete({
     where: {

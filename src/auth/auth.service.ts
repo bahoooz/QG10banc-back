@@ -1,4 +1,5 @@
 import { TLoginSchema, TSignupSchema } from "../../schemas/authSchema.js";
+import { AppError } from "../../utils.js";
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -6,15 +7,9 @@ import jwt from "jsonwebtoken";
 const JWT_SECRET = process.env.JWT_SECRET;
 const GATEKEEPER_PASSWORD = process.env.GATEKEEPER_PASSWORD;
 
-if (!JWT_SECRET)
-  throw new Error(
-    "FATAL ERROR: La variable JWT_SECRET n'est pas définie dans le .env",
-  );
+if (!JWT_SECRET) throw new AppError(500, "INTERNAL_SERVER_ERROR");
 
-if (!GATEKEEPER_PASSWORD)
-  throw new Error(
-    "FATAL ERROR: La variable GATEKEEPER_PASSWORD n'est pas définie dans le .env",
-  );
+if (!GATEKEEPER_PASSWORD) throw new AppError(500, "INTERNAL_SERVER_ERROR");
 
 export const createUserService = async (formData: TSignupSchema) => {
   const { username, email, password } = formData;
@@ -26,8 +21,9 @@ export const createUserService = async (formData: TSignupSchema) => {
   });
 
   if (existingUser)
-    throw new Error(
-      "Un compte existe déjà avec cette email et/ou ce nom d'utilisateur",
+    throw new AppError(
+      409,
+      "ACCOUNT_ALREADY_EXISTS",
     );
 
   const salt = await bcrypt.genSalt(10);
@@ -67,11 +63,11 @@ export const loginService = async ({ username, password }: TLoginSchema) => {
     },
   });
 
-  if (!user) throw new Error("Identifiants invalides");
+  if (!user) throw new AppError(401, "INVALID_CREDENTIALS");
 
   const isPasswordValid = await bcrypt.compare(password, user.hashedPassword);
 
-  if (!isPasswordValid) throw new Error("Identifiants invalides");
+  if (!isPasswordValid) throw new AppError(401, "INVALID_CREDENTIALS");
 
   const payload = {
     type: "user_session",
@@ -107,14 +103,15 @@ export const getSessionService = async (userId: number) => {
     },
   });
 
-  if (!user) throw new Error("Utilisateur introuvable");
+  if (!user)
+    throw new AppError(401, "SESSION_NOT_FOUND");
 
   return user;
 };
 
 export const verifyAndTokenGatekeeperService = async (password: string) => {
   if (password !== GATEKEEPER_PASSWORD) {
-    throw new Error("Mot de passe incorrect");
+    throw new AppError(401, "INVALID_CREDENTIALS");
   }
 
   const token = jwt.sign({ role: "access_profiles" }, JWT_SECRET, {
@@ -149,5 +146,5 @@ export const heartbeatService = async (userId: number) => {
     },
   });
 
-  return heartbeat
+  return heartbeat;
 };

@@ -11,12 +11,12 @@ import promptRoutes from "./prompt/prompt.routes.js";
 import tiktokRoutes from "./tiktok/tiktok.routes.js";
 import youtubeRoutes from "./youtube/youtube.routes.js";
 import authRoutes from "./auth/auth.routes.js";
-import manualGenerateToUploadRoutes from "./manual-generate-to-upload/manual-generate-to-upload.routes.js";
 import cutRoutes from "./cut/cut.routes.js";
 import userRoutes from "./user/user.routes.js";
 import statsRoutes from "./stats/stats.routes.js";
 import notesRoutes from "./notes/notes.routes.js";
 import path from "path";
+import { errorHandler } from "../middlewares/errorHandler.js";
 
 app.use(express.json());
 app.use(cookieParser());
@@ -25,6 +25,7 @@ const allowedOrigins = [
   "https://video.10banc.com",
   "http://localhost:3000",
   "http://localhost:5173",
+  "http://localhost:4173",
   "http://192.168.1.185:5173",
   "http://192.168.1.175:5173",
   "https://10banc.com",
@@ -64,9 +65,6 @@ app.use("/tiktok", tiktokRoutes);
 // ROUTES YOUTUBE
 app.use("/youtube", youtubeRoutes);
 
-// GENERATION VIDEO -> POST TIKTOK
-app.use("/generate-to-upload", manualGenerateToUploadRoutes);
-
 // AUTH USERS
 app.use("/auth", authRoutes);
 
@@ -78,6 +76,8 @@ app.use("/stats", statsRoutes);
 
 // GET NOTES
 app.use("/notes", notesRoutes);
+
+app.use(errorHandler);
 
 app.listen(4000, "0.0.0.0", () => {
   console.log(`Server is running at ${baseUrl}`);

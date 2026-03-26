@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   createNoteService,
   deleteNoteService,
@@ -9,81 +9,102 @@ import {
   updateNoteService,
 } from "./notes.service.js";
 import { noteSchema } from "../../schemas/noteSchema.js";
-import { AuthRequest } from "../auth/auth.middleware.js";
+import { AuthRequest } from "../../middlewares/authHandler.js";
+import { AppError } from "../../utils.js";
 
-export const getNotes = async (_req: Request, res: Response) => {
+export const getNotes = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const notes = await getNotesService();
     console.log(notes);
     return res.status(200).json(notes);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const getPinnedNotes = async (_req: Request, res: Response) => {
+export const getPinnedNotes = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const notes = await getPinnedNotesService();
     console.log(notes);
     return res.status(200).json(notes);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const createNote = async (req: AuthRequest, res: Response) => {
+export const createNote = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const validatedData = noteSchema.parse(req.body);
 
-    if (!req.user)
-      return res.status(401).json({ error: "Utilisateur non trouvé" });
     const authorId = req.user?.id;
 
-    const newNote = createNoteService(validatedData, authorId);
+    if (!authorId)
+      throw new AppError(401, "USER_NOT_FOUND");
+
+    const newNote = await createNoteService(validatedData, authorId);
 
     return res.status(200).json({
       message: "La note a été crée avec succès",
       note: newNote,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const getSpecificNote = async (req: Request, res: Response) => {
+export const getSpecificNote = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { slug } = req.params;
     const note = await getSpecificNoteService(slug);
     console.log(note);
     return res.status(200).json(note);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const pinNote = async (req: Request, res: Response) => {
+export const pinNote = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
     const pinnedNote = await pinNoteService(Number(id));
     console.log(pinnedNote);
     return res.status(200).json(pinnedNote);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const updateNote = async (req: AuthRequest, res: Response) => {
+export const updateNote = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
     const validatedData = noteSchema.parse(req.body);
-    if (!req.user)
-      return res.status(401).json({ error: "Utilisateur non trouvé" });
     const authorId = req.user?.id;
+    if (!authorId)
+      throw new AppError(401, "USER_NOT_FOUND")
 
     const updatedNote = await updateNoteService(
       validatedData,
@@ -96,12 +117,15 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
       note: updatedNote,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const deleteNote = async (req: Request, res: Response) => {
+export const deleteNote = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
     const deletedNote = await deleteNoteService(Number(id));
@@ -111,7 +135,6 @@ export const deleteNote = async (req: Request, res: Response) => {
       note: deletedNote,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Erreur interne du serveur" });
+    next(error);
   }
 };

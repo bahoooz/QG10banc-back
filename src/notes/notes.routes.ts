@@ -1,6 +1,6 @@
 import express from "express";
-import { verifySessionToken } from "../auth/auth.middleware.js";
 import { createNote, deleteNote, getNotes, getPinnedNotes, getSpecificNote, pinNote, updateNote } from "./notes.controller.js";
+import { verifySessionToken } from "../../middlewares/authHandler.js";
 
 const router = express.Router();
 

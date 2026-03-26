@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   checkGatekeeperService,
   checkLoginService,
@@ -9,10 +9,13 @@ import {
   verifyAndTokenGatekeeperService,
 } from "./auth.service.js";
 import { loginSchema, signupSchema } from "../../schemas/authSchema.js";
-import { ZodError } from "zod";
-import { AuthRequest } from "./auth.middleware.js";
+import { AuthRequest } from "../../middlewares/authHandler.js";
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const validatedData = signupSchema.parse(req.body);
 
@@ -22,19 +25,15 @@ export const createUser = async (req: Request, res: Response) => {
       .status(201)
       .json({ message: "Compte créé avec succès", user: newUser });
   } catch (error: any) {
-    console.error(error);
-    if (error instanceof ZodError)
-      return res.status(400).json({
-        error: error.issues[0].message,
-      });
-
-    return res
-      .status(500)
-      .json({ error: error.message || "Erreur interne du serveur" });
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
@@ -53,22 +52,16 @@ export const login = async (req: Request, res: Response) => {
       message: "Connexion réussie",
       user: user,
     });
-  } catch (error: any) {
-    console.error(error);
-    if (error instanceof ZodError)
-      return res.status(400).json({ error: error.issues[0].message });
-
-    if (error.message === "Identifiants invalides") {
-      return res.status(401).json({ error: "Mot de passe incorrect" });
-    }
-
-    return res
-      .status(500)
-      .json({ error: error.message || "Erreur interne du serveur" });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const getSession = async (req: AuthRequest, res: Response) => {
+export const getSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const userId = req.user?.id;
 
@@ -79,17 +72,15 @@ export const getSession = async (req: AuthRequest, res: Response) => {
     return res
       .status(200)
       .json({ message: "Session récupéré avec succès", user: userSession });
-  } catch (error: any) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ error: error.message || "Erreur interne du serveur" });
+  } catch (error) {
+    next(error);
   }
 };
 
 export const verifyPasswordAndLoginGatekeeper = async (
   req: Request,
   res: Response,
+  next: NextFunction,
 ) => {
   try {
     const { password } = req.body;
@@ -107,15 +98,16 @@ export const verifyPasswordAndLoginGatekeeper = async (
     });
 
     return res.status(200).json({ success: true, message: "Accès approuvé" });
-  } catch (error: any) {
-    console.error(error);
-    return res
-      .status(401)
-      .json({ error: error.message || "Mot de passe incorrect" });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const checkGatekeeper = async (req: Request, res: Response) => {
+export const checkGatekeeper = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const token = req.cookies.gatekeeper_token;
 
   if (!token)
@@ -126,12 +118,15 @@ export const checkGatekeeper = async (req: Request, res: Response) => {
 
     return res.status(200).json({ authorized: true });
   } catch (error) {
-    console.error(error);
-    return res.status(401).json({ authorized: false, error: "Token invalide" });
+    next(error);
   }
 };
 
-export const checkLogin = async (req: Request, res: Response) => {
+export const checkLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   const token = req.cookies.authToken;
 
   if (!token)
@@ -141,12 +136,15 @@ export const checkLogin = async (req: Request, res: Response) => {
     checkLoginService(token);
     return res.status(200).json({ authorized: true });
   } catch (error) {
-    console.error(error);
-    return res.status(401).json({ authorized: false, error: "Token invalide" });
+    next(error);
   }
 };
 
-export const heartbeat = async (req: AuthRequest, res: Response) => {
+export const heartbeat = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const userId = req.user?.id;
 
@@ -156,7 +154,6 @@ export const heartbeat = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({ status: "ok" });
   } catch (error) {
-    console.error("Erreur heartbeat : ", error);
-    return res.status(500).json({ message: "Erreur interne du serveur" });
+    next(error);
   }
 };
