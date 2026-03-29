@@ -58,8 +58,8 @@ POST http://localhost:4000/auth/signup
 Content-Type: application/json
 
 {
-        "username": "bahoz2",
-        "email": "vin22@kiki.com",
+        "username": "testco",
+        "email": "vin22222@kiki.com",
         "password": "vlonssel2"
 }
 

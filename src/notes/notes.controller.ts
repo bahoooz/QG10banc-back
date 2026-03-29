@@ -11,6 +11,7 @@ import {
 import { noteSchema } from "../../schemas/noteSchema.js";
 import { AuthRequest } from "../../middlewares/authHandler.js";
 import { AppError } from "../../utils.js";
+import { mailService } from "../lib/mail.js";
 
 export const getNotes = async (
   _req: Request,
@@ -50,10 +51,22 @@ export const createNote = async (
 
     const authorId = req.user?.id;
 
-    if (!authorId)
-      throw new AppError(401, "USER_NOT_FOUND");
+    if (!authorId) throw new AppError(401, "USER_NOT_FOUND");
 
     const newNote = await createNoteService(validatedData, authorId);
+
+    const memberEmails = newNote.members.map((m) => m.email);
+
+    if (memberEmails.length > 0 && newNote.mentionMembers) {
+      mailService
+        .mentionMembersNote({
+          emails: memberEmails,
+          noteTitle: newNote.title,
+          author: newNote.author.username,
+          slug: newNote.slug,
+        })
+        .catch((error) => console.error("Erreur mail :", error));
+    }
 
     return res.status(200).json({
       message: "La note a été crée avec succès",
@@ -103,8 +116,7 @@ export const updateNote = async (
     const { id } = req.params;
     const validatedData = noteSchema.parse(req.body);
     const authorId = req.user?.id;
-    if (!authorId)
-      throw new AppError(401, "USER_NOT_FOUND")
+    if (!authorId) throw new AppError(401, "USER_NOT_FOUND");
 
     const updatedNote = await updateNoteService(
       validatedData,

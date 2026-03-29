@@ -58,6 +58,19 @@ export const createNoteService = async (
       authorId: Number(authorId),
       pin,
     },
+    include: {      
+      members: {
+        select: {
+          email: true,
+          username: true,
+        },
+      },
+      author: {
+        select: {
+          username: true,
+        },
+      },
+    },
   });
 
   return newNote;
